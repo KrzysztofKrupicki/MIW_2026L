@@ -31,7 +31,7 @@ def wyswietl_reguly(reguly, pokaz_liste_support=False):
             f"(a{idx+1} = {r['wartosci'][idx]})" for idx in r["kombinacja"]
         )
         support = f"[{r['support']}]" if r["support"] > 1 else ""
-        print(f"{warunki} => d = {r['decyzja']} {support}")
+        print(f"{warunki} => (d = {r['decyzja']}) {support}")
         if pokaz_liste_support and r["support"] > 1:
             print([x + 1 for x in r["lista_support"]])
 
@@ -87,4 +87,4 @@ def sequential_covering(system_decyzyjny):
 
 
 wynik = sequential_covering(system_decyzyjny)
-wyswietl_reguly(wynik, True)
+wyswietl_reguly(wynik)
