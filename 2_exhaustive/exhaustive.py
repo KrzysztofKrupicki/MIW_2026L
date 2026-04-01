@@ -17,7 +17,10 @@ def wyswietl_reguly(reguly, pokaz_liste_support=False):
 
 
 def znajdz_support(kombinacja, wartosci_obiektu, oczekiwana_decyzja, system_decyzyjny):
-    """Znajduje support reguly - obiekty ktore sa pokryte przez regule i maja ta sama decyzje"""
+    """
+    Funckja obliczajaca support reguly.
+    Szuka wszystkich obiektow, ktore pasuja do warunkow reguly i maja taka sama decyzje.
+    """
     lista_support = []
     for idx, wiersz in enumerate(system_decyzyjny):
         if all(wiersz[k] == wartosci_obiektu[k] for k in kombinacja):
@@ -32,7 +35,9 @@ def exhaustive(system_decyzyjny):
     ile_obiektow = len(atrybuty)
     ile_atrybutow = len(atrybuty[0])
     macierz_nieodroznialnosci = np.full((ile_obiektow, ile_obiektow), set())
-    # Budowa macierzy nieodróżnialności
+
+    # Budowa macierzy nieodroznialnosci
+    # Porownujemy kazdy obiekt z kazdym, do zbioru dodajemy tylko te atrybuty, ktore sa takie same w obu obiektach, ale maja rozne decyzje.
     for i in range(ile_obiektow):
         for j in range(ile_obiektow):
             if decyzje[i] != decyzje[j]:
@@ -44,32 +49,37 @@ def exhaustive(system_decyzyjny):
 
     reguly_dla_rzedu = {}
     ostateczne_reguly = {i: [] for i in range(ile_obiektow)}
-    # Generowanie reguł dla kombinacji atrybutów
+
+    # Rzad to dlugosc reguly
     for rzad in range(1, ile_atrybutow + 1):
         reguly = []
         for idx_obiektu in range(ile_obiektow):
             for kombinacja in combinations(range(ile_atrybutow), rzad):
                 kombinacja_set = set(kombinacja)
-                # Sprawdzenie czy obecna kombinacja jest nadzbiorem krótszej reguły
+
+                # Jesli kombinacja jest podzbiorem innej krotszej kombinacji, to ja pomijamy.
                 if any(
                     set(krotsza_kombinacja).issubset(kombinacja_set)
                     for krotsza_kombinacja in ostateczne_reguly[idx_obiektu]
                 ):
                     continue
 
-                # Sprawdzenie czy kombinacja atrybutow rozroznia obiekt od innych
+                # Jesli kombinacja jest podzbiorem komorki macierzy nieodroznialnosci, to ja pomijamy.
                 if any(
                     kombinacja_set.issubset(komorka)
                     for komorka in macierz_nieodroznialnosci[:, idx_obiektu]
                 ):
                     continue
 
+                # Szukamy support reguly
                 lista_support = znajdz_support(
                     kombinacja,
                     atrybuty[idx_obiektu],
                     decyzje[idx_obiektu],
                     system_decyzyjny,
                 )
+
+                # Jesli kombinacja jest niesprzeczna i ma support > 0
                 if lista_support:
                     ostateczne_reguly[idx_obiektu].append(kombinacja)
                     reguly.append(
@@ -83,12 +93,14 @@ def exhaustive(system_decyzyjny):
                         }
                     )
 
-        # Grupowanie reguł wygenerowanych przez różne obiekty
+        # Usuwamy duplikaty reguly
         zgrupowane_reguly = []
         klucze_regul = set()
         for reg in reguly:
+            # Tworzymy klucz reguly
             wartosci_reguly = tuple(reg["wartosci"][idx] for idx in reg["kombinacja"])
             klucz_reguly = (reg["kombinacja"], wartosci_reguly, reg["decyzja"])
+            # Jesli klucz reguly nie jest w zbiorze kluczy, dodajemy go do zbioru i reguly do listy
             if klucz_reguly not in klucze_regul:
                 klucze_regul.add(klucz_reguly)
                 zgrupowane_reguly.append(reg)

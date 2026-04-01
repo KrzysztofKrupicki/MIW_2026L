@@ -7,7 +7,10 @@ system_decyzyjny = [wiersz.strip().split() for wiersz in system_decyzyjny]
 def czy_niesprzeczna(
     kombinacja, wartosci_obiektu, oczekiwana_decyzja, system_decyzyjny
 ):
-    """Funkcja sprawdzajaca niesprzecznosc reguly"""
+    """
+    Funkcja sprawdzajaca niesprzecznosc reguly.
+    Regula jest niesprzeczna, gdy ma wszystkie atrybuty i decyzje taka sama jak obiekt.
+    """
     for wiersz in system_decyzyjny:
         if all(wiersz[k] == wartosci_obiektu[k] for k in kombinacja):
             if wiersz[-1] != oczekiwana_decyzja:
@@ -16,7 +19,10 @@ def czy_niesprzeczna(
 
 
 def znajdz_support(kombinacja, wartosci_obiektu, oczekiwana_decyzja, system_decyzyjny):
-    """Znajduje support reguly - obiekty ktore sa pokryte przez regule i maja ta sama decyzje"""
+    """
+    Funckja obliczajaca support reguly.
+    Szuka wszystkich obiektow, ktore pasuja do warunkow reguly i maja taka sama decyzje.
+    """
     lista_support = []
     for idx, wiersz in enumerate(system_decyzyjny):
         if all(wiersz[k] == wartosci_obiektu[k] for k in kombinacja):
@@ -40,18 +46,27 @@ def sequential_covering(system_decyzyjny):
     atrybuty = [wiersz[:-1] for wiersz in system_decyzyjny]
     decyzje = [wiersz[-1] for wiersz in system_decyzyjny]
     ile_atrybutow = len(atrybuty[0])
+
+    # Zbior obiektow, ktore jeszcze nie posiadaja swojej reguly
     idx_niepokrytych = set(range(len(atrybuty)))
     reguly = []
 
+    # Rzad oznacza dlugosc reguly
     for rzad in range(1, ile_atrybutow + 1):
+        # Jesli wszystkie obiekty sa juz pokryte, konczymy algorytm
         if not idx_niepokrytych:
             break
+
         obiekty_pokryte = set()
+
         for idx_obiektu in idx_niepokrytych:
-            # pomin obiekty ktore zostaly juz pokryte
+            # Pomijamy wiersze, ktore zostaly pokryte w biezacym rzedzie
             if idx_obiektu in obiekty_pokryte:
                 continue
+
+            # Generujemy wszystkie kombinacje atrybutow dlugosci rzedu
             for kombinacja in combinations(range(ile_atrybutow), rzad):
+                # Sprawdzamy czy kombinacja jest niesprzeczna
                 if czy_niesprzeczna(
                     kombinacja,
                     atrybuty[idx_obiektu],
@@ -60,7 +75,7 @@ def sequential_covering(system_decyzyjny):
                 ):
                     obiekty_pokryte.add(idx_obiektu)
 
-                    # znajdz obiekty ktore sa pokryte przez regule i maja ta sama decyzje - support
+                    # Szukamy support reguly
                     lista_support = znajdz_support(
                         kombinacja,
                         atrybuty[idx_obiektu],
@@ -68,6 +83,7 @@ def sequential_covering(system_decyzyjny):
                         system_decyzyjny,
                     )
 
+                    # Jesli kombinacja jest niesprzeczna i ma support > 0
                     if len(lista_support) > 0:
                         reguly.append(
                             {
@@ -79,9 +95,12 @@ def sequential_covering(system_decyzyjny):
                                 "lista_support": lista_support,
                             }
                         )
+                        # Dodajemy obiekty pokryte przez regule do zbioru obslugiwanych obiektow
                         for idx_obiektu_w_support in lista_support:
                             obiekty_pokryte.add(idx_obiektu_w_support)
                         break
+
+        # Usuwamy obiekty pokryte przez regule z zbioru niepokrytych obiektow
         idx_niepokrytych -= obiekty_pokryte
     return reguly
 
