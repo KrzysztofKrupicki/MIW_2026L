@@ -17,23 +17,23 @@ def odleglosc_euklidesowa(p, q):
     return np.sqrt(np.sum((p[:-1] - q[:-1]) ** 2))
 
 
-def przygotuj_obiekty_treningowe(systemy, idx_systemu_testowego):
+def przygotuj_system_treningowy(systemy, idx_systemu_testowego):
     """
-    Funkcja tworzaca systemy treningowe z podanych systemow.
+    Funkcja tworzaca system treningowy z podanych systemow bez systemu testowego.
     """
-    systemy_treningowe = []
+    system_treningowy = []
     for id_systemu, obiekty in systemy.items():
         if id_systemu != idx_systemu_testowego:
-            systemy_treningowe.extend(obiekty)
-    return systemy_treningowe
+            system_treningowy.extend(obiekty)
+    return system_treningowy
 
 
-def sklasyfikuj_obiekt(wiersz_test, systemy_treningowe, dane, k):
+def sklasyfikuj_obiekt(wiersz_test, system_treningowy, dane, k):
     """
     Funkcja klasyfikujaca obiekt na podstawie k najblizszych sasiadow.
     """
     dystanse = []
-    for idx_obiektu_trening in systemy_treningowe:
+    for idx_obiektu_trening in system_treningowy:
         wiersz_trening = dane[idx_obiektu_trening]
 
         # Obliczanie dystansu euklidesowego
@@ -95,12 +95,12 @@ globalna_macierz_pomylek = {
 # Petla kroswalidacji - kazdy system musi byc raz systemem testowym, reszta to systemy treningowe
 for idx_systemu_testowego in range(liczba_systemow):
     # Tworzymy systemy treningowe - wszystkie oprocz testowego
-    systemy_treningowe = przygotuj_obiekty_treningowe(systemy, idx_systemu_testowego)
+    systemy_treningowe = przygotuj_system_treningowy(systemy, idx_systemu_testowego)
 
-    obiekty_testowe = systemy[idx_systemu_testowego]
+    system_testowy = systemy[idx_systemu_testowego]
 
     poprawne_decyzje = 0
-    lacznie_testowanych = len(obiekty_testowe)
+    lacznie_testowanych = len(system_testowy)
 
     macierz_pomylek = {
         "TN": 0,
@@ -110,7 +110,7 @@ for idx_systemu_testowego in range(liczba_systemow):
     }
 
     # Przechodzimy po kazdym obiekcie z systemu testowego
-    for idx_obiektu_test in obiekty_testowe:
+    for idx_obiektu_test in system_testowy:
         wiersz_test = dane[idx_obiektu_test]
 
         decyzja_predykcyjna = sklasyfikuj_obiekt(
