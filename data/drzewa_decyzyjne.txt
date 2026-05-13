@@ -1,0 +1,14 @@
+Słoneczna Gorąco Wysoka Słaby Nie
+Słoneczna Gorąco Wysoka Mocny Nie
+Pochmurna Gorąco Wysoka Słaby Tak
+Deszczowa Łagodnie Wysoka Słaby Tak
+Deszczowa Chłodno Normalna Słaby Tak
+Deszczowa Chłodno Normalna Mocny Nie
+Pochmurna Chłodno Normalna Mocny Tak
+Słoneczna Łagodnie Wysoka Słaby Nie
+Słoneczna Chłodno Normalna Słaby Tak
+Deszczowa Łagodnie Normalna Słaby Tak
+Słoneczna Łagodnie Normalna Mocny Tak
+Pochmurna Łagodnie Wysoka Mocny Tak
+Pochmurna Gorąco Normalna Słaby Tak
+Deszczowa Łagodnie Wysoka Mocny Nie
