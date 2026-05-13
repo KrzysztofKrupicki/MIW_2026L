@@ -1,7 +1,8 @@
-import pprint
-
 system_decyzyjny = open("./data/system_decyzyjny_lem2.txt").readlines()
 system_decyzyjny = [wiersz.strip().split() for wiersz in system_decyzyjny]
+atrybuty = [wiersz[:-1] for wiersz in system_decyzyjny]
+ile_obiektow = len(atrybuty)
+ile_atrybutow = len(atrybuty[0])
 
 
 def wyswietl_reguly(reguly, pokaz_liste_support=False):
@@ -9,17 +10,14 @@ def wyswietl_reguly(reguly, pokaz_liste_support=False):
         warunki = " AND ".join(
             f"(a{idx+1} = {r['wartosci'][idx]})" for idx in r["kombinacja"]
         )
+        decyzja = " OR ".join(f"(d = {d})" for d in r["decyzje"])
         support = f"[{r['support']}]" if r["support"] > 1 else ""
-        print(f"{warunki} => (d = {r['decyzja']}) {support}")
+        print(f"r{r['idx_obiektu']+1} {warunki} => {decyzja} {support}")
         if pokaz_liste_support and r["support"] > 1:
             print([x + 1 for x in r["lista_support"]])
 
 
-def lem2(system_decyzyjny):
-    atrybuty = [wiersz[:-1] for wiersz in system_decyzyjny]
-    ile_obiektow = len(atrybuty)
-    ile_atrybutow = len(atrybuty[0])
-
+def lem2():
     # Obliczenie licznosci: dict[idx_atrybutu][wartosc_atrybutu] = set{idx_obiektow}
     licznosci_atrybutow = {}
     for idx_atrybutu in range(ile_atrybutow):
@@ -29,7 +27,6 @@ def lem2(system_decyzyjny):
             if wartosc not in licznosci_atrybutow[idx_atrybutu]:
                 licznosci_atrybutow[idx_atrybutu][wartosc] = set()
             licznosci_atrybutow[idx_atrybutu][wartosc].add(idx_obiektu)
-    # pprint.pprint(licznosci_atrybutow)
 
     # Podzial na klasy decyzyjne
     klasy_decyzyjne = {}
@@ -114,7 +111,7 @@ def lem2(system_decyzyjny):
                             max_pokrycie = pokrycie
                             najlepszy_deskryptor = (idx_atrybutu, wartosc_atrybutu)
 
-                if najlepszy_deskryptor is None or max_pokrycie == 0:
+                if najlepszy_deskryptor is None:
                     break
 
                 # Dodajemy wybrany deskryptor do reguly i aktualizujemy zbior kandydatow.
@@ -130,20 +127,38 @@ def lem2(system_decyzyjny):
             pokryte_przez_regule = obiekty_kandydujace & obiekty_w_klasie
             obiekty_niepokryte -= pokryte_przez_regule
 
+            # Znajdujemy wszystkie decyzje pokryte przez te regule
+            decyzje_reguly = set()
+            for idx in obiekty_kandydujace:
+                decyzje_reguly.add(system_decyzyjny[idx][-1])
+
             reguly_systemu.append(
                 {
                     "kombinacja": [deskryptor[0] for deskryptor in obecna_regula],
                     "wartosci": {
                         deskryptor[0]: deskryptor[1] for deskryptor in obecna_regula
                     },
-                    "decyzja": klasa_decyzyjna,
-                    "support": len(pokryte_przez_regule),
-                    "lista_support": sorted(list(pokryte_przez_regule)),
+                    "decyzje": decyzje_reguly,
+                    "support": len(obiekty_kandydujace),
+                    "lista_support": obiekty_kandydujace,
                 }
             )
 
-    return reguly_systemu
+    # Grupowanie i usuwanie duplikatów przed zwróceniem wyniku
+    zgrupowane_reguly = []
+    klucze_regul = set()
+
+    for reg in reguly_systemu:
+        kombinacja = tuple(sorted(reg["kombinacja"]))
+        wartosci_reguly = tuple(reg["wartosci"][idx] for idx in kombinacja)
+        klucz_reguly = (kombinacja, wartosci_reguly, tuple(sorted(list(reg["decyzje"]))))
+
+        if klucz_reguly not in klucze_regul:
+            klucze_regul.add(klucz_reguly)
+            zgrupowane_reguly.append(reg)
+
+    return zgrupowane_reguly
 
 
-wynik = lem2(system_decyzyjny)
+wynik = lem2()
 wyswietl_reguly(wynik, pokaz_liste_support=False)

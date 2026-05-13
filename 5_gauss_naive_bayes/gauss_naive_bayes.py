@@ -35,7 +35,6 @@ def przygotuj_system_treningowy(systemy, idx_systemu_testowego):
 
 
 def gauss(a, srednia, wariancja):
-    wariancja = max(wariancja, 1e-9)
     return np.log(
         1
         / np.sqrt(2 * np.pi * wariancja)
@@ -53,7 +52,9 @@ def sklasyfikuj_obiekt(wiersz_test, statystyki_klas):
     for klasa, statystyki in statystyki_klas.items():
         wynik = statystyki["log_p_c"]
         for i, atrybut in enumerate(atrybuty):
-            wynik += gauss(float(atrybut), statystyki["srednie"][i], statystyki["wariancje"][i])
+            wynik += gauss(
+                float(atrybut), statystyki["srednie"][i], statystyki["wariancje"][i]
+            )
         if wynik > najlepszy_wynik:
             najlepszy_wynik = wynik
             najlepsza_klasa = klasa
@@ -85,7 +86,7 @@ for idx_systemu_testowego in range(liczba_systemow):
         p_c = ilosc_obiektow_klasy / len(system_treningowy)
 
         # Obliczanie statystyk dla kazdego atrybutu
-        atrybuty_klasy = dane[obiekty_klasy, :liczba_atrybutow].astype(float)
+        atrybuty_klasy = dane[obiekty_klasy, :-1].astype(float)
         statystyki_klas[klasa] = {
             "srednie": [np.mean(atrybuty_klasy[:, i]) for i in range(liczba_atrybutow)],
             "wariancje": [
@@ -117,7 +118,7 @@ for idx_systemu_testowego in range(liczba_systemow):
     print(f"\n===== SYSTEM TESTOWY NR {idx_systemu_testowego + 1} =====")
     print(f"Accuracy = {accuracy:.2f}%")
 
-    print("\nMacierz pomylek (wiersze: realne, kolumny: predykcyjne):")
+    print("\nMacierz pomylek (wiersze: prawdziwe, kolumny: predykcyjne):")
     print(f"{'Klasa':<15} {'\t'.join(klasy)}")
     for klasa_prawdziwa in klasy:
         row = f"{klasa_prawdziwa:<15}"
@@ -128,7 +129,7 @@ for idx_systemu_testowego in range(liczba_systemow):
 print("\n===== PODSUMOWANIE GLOBALNE =====")
 print(f"Srednia accuracy: {globalna_accuracy / liczba_systemow:.2f}%")
 
-print("\nMacierz pomylek (wiersze: realne, kolumny: predykcyjne):")
+print("\nMacierz pomylek (wiersze: prawdziwe, kolumny: predykcyjne):")
 print(f"{'Klasa':<15} {'\t'.join(klasy)}")
 for klasa_prawdziwa in klasy:
     row = f"{klasa_prawdziwa:<15}"

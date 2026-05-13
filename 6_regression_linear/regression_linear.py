@@ -25,7 +25,7 @@ b = round(r_xy * s_y / s_x, 2)
 a = round(m_y - b * m_x, 2)
 print(f"y = {b:.2f} * x + {a:.2f}")
 
-x = np.linspace(min(X), max(X), 100)
+x = np.linspace(min(X), max(X))
 y = b * x + a
 
 

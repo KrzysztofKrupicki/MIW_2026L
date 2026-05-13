@@ -9,6 +9,20 @@ liczba_obiektow = dane.shape[0]
 
 k = 5
 
+# Losowanie indeksow obiektow
+rozlosowane_indeksy = []
+while len(rozlosowane_indeksy) < liczba_obiektow:
+    j = random.randint(0, liczba_obiektow - 1)
+    if j not in rozlosowane_indeksy:
+        rozlosowane_indeksy.append(j)
+
+
+# Podzial na systemy
+systemy = {i: [] for i in range(liczba_systemow)}
+for i, idx_obiektu in enumerate(rozlosowane_indeksy):
+    id_systemu = i % liczba_systemow
+    systemy[id_systemu].append(idx_obiektu)
+
 
 def odleglosc_euklidesowa(p, q):
     """
@@ -50,40 +64,30 @@ def sklasyfikuj_obiekt(wiersz_test, system_treningowy, dane, k):
 
     # Liczymy dominujaca klase decyzyjna
     decyzje = [decyzja for dystans, decyzja in k_najblizszych]
+    wartosci_atrybutu, liczebnosci = np.unique(decyzje, return_counts=True)
+    if liczebnosci.shape[0] == 2 and liczebnosci[0] == liczebnosci[1]:
+        return None
     return int(max(set(decyzje), key=decyzje.count))
 
 
-def aktualizuj_macierz_pomylek(prawdziwa_decyzja, decyzja_predykcyjna, macierz_pomylek):
+def aktualizuj_macierz_pomylek(decyzja_prawdziwa, decyzja_predykcyjna, macierz_pomylek):
     """
     Funkcja aktualizujaca macierz pomylek.
     """
-    if prawdziwa_decyzja == 0 and decyzja_predykcyjna == 0:
+    if decyzja_prawdziwa == 0 and decyzja_predykcyjna == 0:
         macierz_pomylek["TN"] += 1
-    elif prawdziwa_decyzja == 0 and decyzja_predykcyjna == 1:
+    elif decyzja_prawdziwa == 0 and decyzja_predykcyjna == 1:
         macierz_pomylek["FP"] += 1
-    elif prawdziwa_decyzja == 1 and decyzja_predykcyjna == 0:
+    elif decyzja_prawdziwa == 1 and decyzja_predykcyjna == 0:
         macierz_pomylek["FN"] += 1
-    elif prawdziwa_decyzja == 1 and decyzja_predykcyjna == 1:
+    elif decyzja_prawdziwa == 1 and decyzja_predykcyjna == 1:
         macierz_pomylek["TP"] += 1
 
-
-# Losowanie indeksow obiektow
-rozlosowane_indeksy = []
-while len(rozlosowane_indeksy) < liczba_obiektow:
-    j = random.randint(0, liczba_obiektow - 1)
-    if j not in rozlosowane_indeksy:
-        rozlosowane_indeksy.append(j)
-
-
-# Podzial na systemy
-systemy = {i: [] for i in range(liczba_systemow)}
-for i, idx_obiektu in enumerate(rozlosowane_indeksy):
-    id_systemu = i % liczba_systemow
-    systemy[id_systemu].append(idx_obiektu)
 
 decyzje_predykcyjne = []
 decyzje_prawdziwe = []
 globalna_accuracy = 0
+global_none = 0
 
 globalna_macierz_pomylek = {
     "TN": 0,
@@ -108,7 +112,7 @@ for idx_systemu_testowego in range(liczba_systemow):
         "FN": 0,
         "TP": 0,
     }
-
+    ile_none = 0
     # Przechodzimy po kazdym obiekcie z systemu testowego
     for idx_obiektu_test in system_testowy:
         wiersz_test = dane[idx_obiektu_test]
@@ -116,19 +120,24 @@ for idx_systemu_testowego in range(liczba_systemow):
         decyzja_predykcyjna = sklasyfikuj_obiekt(
             wiersz_test, systemy_treningowe, dane, k
         )
-        prawdziwa_decyzja = int(wiersz_test[-1])
+        if decyzja_predykcyjna is None:
+            ile_none += 1
+            global_none += 1
+            continue
+
+        decyzja_prawdziwa = int(wiersz_test[-1])
 
         # Liczenie poprawnych decyzji
-        if prawdziwa_decyzja == decyzja_predykcyjna:
+        if decyzja_prawdziwa == decyzja_predykcyjna:
             poprawne_decyzje += 1
 
         # Zapisujemy decyzje do macierzy pomylek
         aktualizuj_macierz_pomylek(
-            prawdziwa_decyzja, decyzja_predykcyjna, macierz_pomylek
+            decyzja_prawdziwa, decyzja_predykcyjna, macierz_pomylek
         )
 
         # Zapisujemy decyzje
-        decyzje_prawdziwe.append(prawdziwa_decyzja)
+        decyzje_prawdziwe.append(decyzja_prawdziwa)
         decyzje_predykcyjne.append(decyzja_predykcyjna)
 
     # Obliczanie accuracy dla obecnego systemu testowego
@@ -137,6 +146,7 @@ for idx_systemu_testowego in range(liczba_systemow):
 
     print(f"\n===== SYSTEM TESTOWY NR {idx_systemu_testowego + 1} =====")
     print(f"Accuracy = {accuracy:.2f}%")
+    print(f"Ile nieklasyfikowanych: {ile_none}")
     print("Macierz pomylek:")
     macierz_pomylek_2x2 = np.array(
         [
@@ -151,7 +161,7 @@ for idx_systemu_testowego in range(liczba_systemow):
 
 print("\n===== PODSUMOWANIE GLOBALNE =====")
 print(f"Srednia accuracy: {globalna_accuracy / liczba_systemow:.2f}%")
-
+print(f"Ile nieklasyfikowanych: {global_none}")
 print("Macierz pomylek dla wszystkich systemow:")
 globalna_macierz_pomylek_2x2 = np.array(
     [

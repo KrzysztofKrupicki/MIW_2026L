@@ -3,6 +3,10 @@ import numpy as np
 
 system_decyzyjny = open("./data/system_decyzyjny.txt").readlines()
 system_decyzyjny = [wiersz.strip().split() for wiersz in system_decyzyjny]
+atrybuty = [wiersz[:-1] for wiersz in system_decyzyjny]
+decyzje = [wiersz[-1] for wiersz in system_decyzyjny]
+ile_obiektow = len(atrybuty)
+ile_atrybutow = len(atrybuty[0])
 
 
 def wyswietl_reguly(reguly, pokaz_liste_support=False):
@@ -11,16 +15,13 @@ def wyswietl_reguly(reguly, pokaz_liste_support=False):
             f"(a{idx+1} = {r['wartosci'][idx]})" for idx in r["kombinacja"]
         )
         support = f"[{r['support']}]" if r["support"] > 1 else ""
-        print(f"{warunki} => (d = {r['decyzja']}) {support}")
+        print(f"o{r['idx_obiektu']+1} {warunki} => d = {r['decyzja']} {support}")
         if pokaz_liste_support and r["support"] > 1:
             print([x + 1 for x in r["lista_support"]])
 
 
-def znajdz_support(kombinacja, wartosci_obiektu, oczekiwana_decyzja, system_decyzyjny):
-    """
-    Funckja obliczajaca support reguly.
-    Szuka wszystkich obiektow, ktore pasuja do warunkow reguly i maja taka sama decyzje.
-    """
+def znajdz_support(kombinacja, wartosci_obiektu, oczekiwana_decyzja):
+    """Znajduje support reguly - obiekty ktore sa pokryte przez regule i maja ta sama decyzje"""
     lista_support = []
     for idx, wiersz in enumerate(system_decyzyjny):
         if all(wiersz[k] == wartosci_obiektu[k] for k in kombinacja):
@@ -29,15 +30,9 @@ def znajdz_support(kombinacja, wartosci_obiektu, oczekiwana_decyzja, system_decy
     return lista_support
 
 
-def exhaustive(system_decyzyjny):
-    atrybuty = [wiersz[:-1] for wiersz in system_decyzyjny]
-    decyzje = [wiersz[-1] for wiersz in system_decyzyjny]
-    ile_obiektow = len(atrybuty)
-    ile_atrybutow = len(atrybuty[0])
+def exhaustive():
     macierz_nieodroznialnosci = np.full((ile_obiektow, ile_obiektow), set())
-
     # Budowa macierzy nieodroznialnosci
-    # Porownujemy kazdy obiekt z kazdym, do zbioru dodajemy tylko te atrybuty, ktore sa takie same w obu obiektach, ale maja rozne decyzje.
     for i in range(ile_obiektow):
         for j in range(ile_obiektow):
             if decyzje[i] != decyzje[j]:
@@ -64,22 +59,18 @@ def exhaustive(system_decyzyjny):
                 ):
                     continue
 
-                # Jesli kombinacja jest podzbiorem komorki macierzy nieodroznialnosci, to ja pomijamy.
+                # Sprawdzenie czy kombinacja atrybutow rozroznia obiekt od innych
                 if any(
                     kombinacja_set.issubset(komorka)
                     for komorka in macierz_nieodroznialnosci[:, idx_obiektu]
                 ):
                     continue
 
-                # Szukamy support reguly
                 lista_support = znajdz_support(
                     kombinacja,
                     atrybuty[idx_obiektu],
                     decyzje[idx_obiektu],
-                    system_decyzyjny,
                 )
-
-                # Jesli kombinacja jest niesprzeczna i ma support > 0
                 if lista_support:
                     ostateczne_reguly[idx_obiektu].append(kombinacja)
                     reguly.append(
@@ -113,7 +104,7 @@ def exhaustive(system_decyzyjny):
     return reguly_dla_rzedu
 
 
-wynik = exhaustive(system_decyzyjny)
+wynik = exhaustive()
 
 for rzad in wynik:
     print(f"Reguly dla rzedu {rzad}")
