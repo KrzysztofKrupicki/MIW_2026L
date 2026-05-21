@@ -24,8 +24,7 @@ def gain(s, idx_atrybutu):
     return entropy_s - suma_entropii
 
 
-def najczestsza_decyzja(system):
-    decyzje = system[:, -1]
+def najczestsza_decyzja(decyzje):
     wartosci, liczebnosci = np.unique(decyzje, return_counts=True)
     return wartosci[np.argmax(liczebnosci)]
 
@@ -39,7 +38,7 @@ def id3(system, atrybuty):
 
     # Jesli nie ma juz wiecej atrybutow do podzialu, zwracamy decyzje, ktora wystepuje wiecej razy
     if not atrybuty:
-        return najczestsza_decyzja(system)
+        return najczestsza_decyzja(decyzje)
 
     # Wybor najlepszego atrybutu
     gains = [gain(system, a) for a in atrybuty]
@@ -48,7 +47,7 @@ def id3(system, atrybuty):
 
     # Gain <= 0 - zwracamy decyzje, ktora wystepuje wiecej razy
     if gains[najlepszy_id] <= 0:
-        return najczestsza_decyzja(system)
+        return najczestsza_decyzja(decyzje)
 
     # Tworzymy nowy wezel drzewa
     drzewo = {"atrybut": najlepszy_atrybut, "dzieci": {}}
@@ -61,7 +60,7 @@ def id3(system, atrybuty):
 
         if len(podzbior) == 0:
             # jesli podzbior jest pusty bierzemy wiekszosc z rodzica
-            drzewo["dzieci"][wartosc] = najczestsza_decyzja(system)
+            drzewo["dzieci"][wartosc] = najczestsza_decyzja(decyzje)
         else:
             # budowanie galezi
             drzewo["dzieci"][wartosc] = id3(podzbior, pozostale_atrybuty)
