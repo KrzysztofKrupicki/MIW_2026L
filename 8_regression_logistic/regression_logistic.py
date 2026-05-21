@@ -86,7 +86,6 @@ for idx_systemu_testowego in range(liczba_systemow):
     dane_treningowe = dane[system_treningowy, :-1]
     srednie = np.mean(dane_treningowe, axis=0)
     odchylenia = np.std(dane_treningowe, axis=0)
-    odchylenia[odchylenia == 0] = 1e-9
 
     # Ustawienie wartosci poczatkowych
     wagi = np.zeros(ile_atrybutow)
